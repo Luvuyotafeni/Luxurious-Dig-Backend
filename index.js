@@ -8,6 +8,10 @@ app.use(cors())
 
 mongoose.connect("mongodb://localhost:27017/lxd");
 
+app.post('/users', (req, res) => {
+    
+})
+
 app.listen(3001, () => {
     console.log("server is running")
 })
