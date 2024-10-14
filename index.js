@@ -35,6 +35,10 @@ app.post('/login',(req, res) => {
             res.json("Email is not registered try to register")
         }
     })
+    .catch(err => {
+        console.error(err);
+        res.status(500).json("Internal server error")
+    })
 })
 
 app.post('/users', (req, res) => {
