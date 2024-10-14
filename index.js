@@ -26,10 +26,21 @@ app.post('/login',(req, res) => {
 })
 
 app.post('/users', (req, res) => {
-    userModel.create(req.body)
-    .then(users => res.json(users))
-    .catch(err => res.json(err))
-})
+    const { name, surname, phone, email, password, cart } = req.body;
+    
+    const newUser = new userModel({
+        name,
+        surname,
+        phone,
+        email,
+        password,
+        cart: cart || []  // Merge cart from request or initialize as empty
+    });
+
+    newUser.save()
+    .then(user => res.json(user))
+    .catch(err => res.status(500).json(err));
+});
 
 app.listen(3001, () => {
     console.log("server is running")
