@@ -5,7 +5,11 @@ const userSchema = new mongoose.Schema({
     surname: String,
     phone: String,
     email: String,
-    password: String
+    password: String,
+    cart: {
+        type: Array,
+        default: []
+    }
 })
 
 const userModel = mongoose.model("users", userSchema)
