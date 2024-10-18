@@ -47,6 +47,7 @@ app.post('/login', (req, res) => {
     });
 });
 
+
 // Sign-Up Route
 app.post('/users', (req, res) => {
     const { name, surname, phone, email, password, cart } = req.body;
@@ -67,6 +68,28 @@ app.post('/users', (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     });
 });
+
+// Route to remove an item from the cart
+app.delete('/cart/:userId/:itemId', (req, res) => {
+    const {userId, itemId} = req.params;
+
+    // finding the user bu ID and removed them specific item from cart
+    userModel.findOneAndUpdate(
+        {_id: userId},
+        {$pull : {cart: {_id: mongoose.Types.ObjectId(itemId)}}},
+        {new: true}
+    )
+    .then(updatedUser => {
+        if (!updatedUser) {
+            return res.status(404).json({message: "User not found"});
+        }
+        res.status(200).json({message: "item successfully removed", cart: updatedUser.cart});
+    })
+    .catch(err => {
+        console.error("Error removing item from cart", err);
+        res.status(500).json({message: "Internal server error"});
+    })
+})
 
 // Start the server
 app.listen(3001, () => {
