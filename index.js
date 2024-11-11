@@ -17,24 +17,7 @@ mongoose.connect("mongodb+srv://luvuyo:1234@tester.sgrsmdc.mongodb.net/lxd?retry
 .then(() => console.log("Connected to MongoDB"))
 .catch(err => console.error("Could not connect to MongoDB", err));
 
-// Route to delete an item from the user's cart
-app.delete('/cart/:userId/:itemId', async (req, res) => {
-  const { userId, itemId } = req.params;
-  try {
-    const updatedUser = await userModel.findByIdAndUpdate(
-      userId,
-      { $pull: { cart: { _id: itemId } } },
-      { new: true }
-    );
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'User or item not found' });
-    }
-    res.json({ message: 'Item removed from cart successfully', cart: updatedUser.cart });
-  } catch (error) {
-    console.error('Error removing item from cart:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
+
 
 // Login Route
 app.post('/login', async (req, res) => {
@@ -82,33 +65,29 @@ app.post('/users', async (req, res) => {
   }
 });
 
-// Update cart items for a user
-app.put('/cart/:userId', async (req, res) => {
-  const { userId } = req.params;
-  const { cart } = req.body; // Expecting cart as an array of cart items
 
+// Route to delete an item by index in the user's cart
+app.put('/cart/:userId/remove-item/:itemId', async (req, res) => {
+  const { userId, itemId } = req.params;
   try {
-    // Validate that the cart data is an array
-    if (!Array.isArray(cart)) {
-      return res.status(400).json({ message: 'Cart must be an array' });
-    }
-
-    // Update the user's cart in MongoDB
-    const updatedUser = await userModel.findByIdAndUpdate(
-      userId,
-      { cart: cart },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedUser) {
+    const user = await userModel.findById(userId);
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ message: 'Cart updated successfully', cart: updatedUser.cart });
+
+    // Filter the cart to remove the item by its unique _id
+    user.cart = user.cart.filter(item => item._id.toString() !== itemId);
+
+    // Save the updated user cart
+    await user.save();
+    res.json({ message: 'Item removed from cart successfully', cart: user.cart });
   } catch (error) {
     console.error('Error updating cart:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+
 
 // Start the server
 app.listen(3001, () => {
