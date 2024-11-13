@@ -24,9 +24,18 @@ mongoose.connect("mongodb+srv://luvuyo:1234@tester.sgrsmdc.mongodb.net/lxd?retry
 // Login Route
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
   try {
+    // Find the user by email
     const user = await userModel.findOne({ email });
-    if (user && user.password === password) { // Simple password check
+
+    // Check if user exists and if password matches
+    if (user && user.password === password) { // Simple password check (not secure for production)
+      
+      // Find the cart associated with this user
+      const cart = await cartModel.findOne({ userId: user._id });
+
+      // Respond with user details and cart information
       res.json({
         message: "Login successful",
         user: {
@@ -35,10 +44,11 @@ app.post('/login', async (req, res) => {
           surname: user.surname,
           email: user.email,
           phone: user.phone,
-          cart: user.cart,
         },
+        cart: cart ? cart.items : [], // Return cart items if found, or an empty array if no cart exists
       });
     } else {
+      // Respond with error if login details are incorrect
       res.status(401).json({ message: "Incorrect password or email not registered" });
     }
   } catch (error) {
@@ -46,6 +56,7 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // User Sign-up Route
 app.post('/users', async (req, res) => {
