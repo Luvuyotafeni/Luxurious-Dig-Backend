@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const userModel = require('./models/users'); // Adjust path as necessary
+const cartModel = require('./models/cartItem');
+const productModel = require('./models/product');
 
 const app = express();
 app.use(express.json());
@@ -45,26 +47,49 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Sign-up Route
+// User Sign-up Route
 app.post('/users', async (req, res) => {
   const { name, surname, phone, email, password, cart } = req.body;
+
+  // First, create a new user
   const newUser = new userModel({
     name,
     surname,
     phone,
     email,
     password, // Storing password as plain text (not recommended for production)
-    cart: cart || []
   });
+
   try {
+    // Save the new user
     const user = await newUser.save();
-    res.status(201).json(user);
+
+    // If cart is provided in the request, save it in the Cart collection
+    const newCart = new cartModel({
+      userId: user._id,  // Linking the userId to the new cart
+      items: cart || [],  // Take cart from request, or an empty array if not provided
+    });
+
+    // Save the cart with the user's cart items
+    await newCart.save();
+
+    res.status(201).json({
+      message: 'User and Cart created successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        phone: user.phone,
+      },
+      cart: newCart,
+    });
+
   } catch (error) {
     console.error("Error during user creation", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 // Route to delete an item by index in the user's cart
 app.put('/cart/:userId/remove-item/:itemId', async (req, res) => {
