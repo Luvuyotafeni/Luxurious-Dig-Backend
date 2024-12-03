@@ -32,10 +32,10 @@ app.post('/login', async (req, res) => {
     // Check if user exists and if password matches
     if (user && user.password === password) { // Simple password check (not secure for production)
       
-      // Find the cart associated with this user
-      const cart = await cartModel.findOne({ userId: user._id });
+      // Fetch the user's cart and populate the 'items' field with product details
+      const userCart = await cartModel.findOne({ userId: user._id }).populate('items.productId'); 
 
-      // Respond with user details and cart information
+      // Respond with user details and populated cart items
       res.json({
         message: "Login successful",
         user: {
@@ -45,7 +45,7 @@ app.post('/login', async (req, res) => {
           email: user.email,
           phone: user.phone,
         },
-        cart: cart ? cart.items : [], // Return cart items if found, or an empty array if no cart exists
+        cart: userCart ? userCart.items : [], // Return the populated cart items
       });
     } else {
       // Respond with error if login details are incorrect
